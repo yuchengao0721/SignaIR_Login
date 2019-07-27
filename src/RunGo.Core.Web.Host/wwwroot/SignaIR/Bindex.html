@@ -1,0 +1,290 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title></title>
+
+    <meta name="description" content="Source code generated using layoutit.com">
+    <meta name="author" content="LayoutIt!">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <h3 class="text-center text-info">
+                    单点登录测试页面
+                </h3>
+                <div class="form-group">
+                    <label for="account">
+                        登录账号：
+                    </label>
+                    <input type="text" class="form-control" id="account" />
+                </div>
+                <div class="form-group">
+                    <label for="password">
+                        Password
+                    </label>
+                    <input type="text" class="form-control" id="password" />
+                </div>
+                <button type="button" class="btn active btn-outline-success " id="login">
+                    登录
+                </button>
+                <button type="button" class="btn active btn-outline-danger " id="logout" disabled>
+                    登出
+                </button>
+                <div class="form-group">
+                    <label for="token">
+                        你当前使用的Token
+                    </label>
+                    <input type="text" class="form-control" id="token" />
+                </div>
+                <button type="button" class="btn active btn-outline-danger btn-block" id="check" disabled>
+                    验证Token
+                </button>
+                <div class="row col-md-12">
+                    <h4 class=" text-warning">
+                        当前登录状态：<span id="loginState" style="color:red;">未登录</span>
+                    </h4>
+                </div>
+                <div class="row">
+
+                    <div class="col-md-4">
+                        <h4 class="text-center text-info">
+                            SignaIR消息：
+                        </h4>
+                        <ol id="msglist"></ol>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="text-center text-info">
+                            提示消息：
+                        </h4>
+                        <ol id="message"></ol>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="text-center text-info">
+                            Token验证通知：
+                        </h4>
+                        <ol id="checkMessage"></ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- system modal start -->
+    <div id="ycf-alert" class="modal">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                    <!--<span aria-hidden="true">×</span>-->
+                    <span class="sr-only">Close</span></button>
+                    <h5 class="modal-title"><i class="fa fa-exclamation-circle"></i> [Title]</h5>
+                </div>
+                <div class="modal-body small">
+                    <p id="time30">[Message]</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary ok" data-dismiss="modal">[BtnOk]</button>
+                    <button type="button" class="btn btn-default cancel" data-dismiss="modal">[BtnCancel]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- system modal end -->
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/scripts.js"></script>
+    <script src="../js/confirm.js"></script>
+    <script type="text/javascript" src="../js/signalr.min.js"></script>
+    <script>
+        var host = "http://127.0.0.1:8051/";
+        var loginState = false;
+        var countdownNum = 29, countdownInt;
+        let hubUrl = host+'loginTestHubs';
+        let httpConnection = new signalR.HttpConnection(hubUrl);
+        let hubConnection = new signalR.HubConnection(httpConnection);
+        $(function () {
+            //服务地址
+            $("#login").click(function () {
+                login($("#account").val(), $("#password").val())
+            });
+            $("#logout").click(function () {
+                logout();
+            });
+            $("#check").click(function () {
+                CheckTokenTest()
+            });
+
+            //服务器回调方法
+            hubConnection.on("GetMsg", data => {
+                var data = JSON.parse(data);
+                if (data.StateCode == 417) {
+                    $('#msglist').append($('<li class="list-item">').text(data.Msg));
+                    //倒计时30s
+                    countdownInt = setInterval("countdown('是否允许二号机登陆?',true)", 1000);
+                    Modal.confirm({
+                        title:"异地登录提示",
+                        msg: "是否允许二号机登陆？(30秒)"
+                    }).on(function (e) {
+                        AnswerSignaLogin(e);
+                    });
+                }
+                else if (data.StateCode == 200) {
+                    if (data.Msg == "True")
+                        messageMsg("对方已确认，您 登陆 【成功】");
+                    else
+                        messageMsg("对方已拒绝，您 登陆 【失败】");
+                    clearInterval(countdownInt);
+                    Modal.hideAlertCancel();
+                }
+                else if (data.StateCode == 416) {
+                    messageMsg(data.Msg);
+                    Modal.hideAlertOk();
+                }
+                else
+                    $('#msglist').append($('<li class="list-item">').text(data.Msg));
+            });
+
+            hubConnection.start();
+        });
+        //方法体
+        function login(account, password) {
+            $.ajax({
+                url: host+"api/services/app/OAuth2/LoginTest?account=" + account + "&password=" + password,
+                // 提交的页面
+                data: {},
+                // 从表单中获取数据
+                type: "POST",
+                // 设置请求类型为"POST"，默认为"GET"
+                async: true,
+                success: function (data) {
+                    if (!data.LoginWaitState) {
+                        if (!!data.Msg) {
+                            messageMsg(data.Msg);
+                        }
+                        else {
+                            $("#token").val(data.access_token);
+                            messageMsg("登陆成功");
+                            //新建对象
+                            let token = $('#token').val();
+                            SignaIRTest(token);
+                            changeloginState(true);
+                        }
+                    }
+                    else {
+                        $("#token").val(data.access_token);
+                        Modal.dialog({
+                            title:"等待确认",
+                            msg: "等待对方确认中(30秒)",
+                            btnok: null,
+                            btncl: null
+                        });
+                        countdownInt = setInterval("countdown('等待对方确认中',false)", 1000);
+                        messageMsg("等待对方确认中");
+                        //新建对象
+                        let token = $('#token').val();
+                        SignaIRTest(token);
+                    }
+                }
+            });
+        }
+        function logout() {
+            $.ajax({
+                url: host+"api/services/app/OAuth2/LoginOut?Token=" +  $('#token').val(),
+                // 提交的页面
+                data: {},
+                // 从表单中获取数据
+                type: "POST",
+                // 设置请求类型为"POST"，默认为"GET"
+                async: true,
+                success: function (data) {
+                    $("#loginState").html("退出登录");
+                    changeloginState(false);
+                }
+            });
+        }
+        function AnswerSignaLogin(sure) {
+            $.ajax({
+                url: host+"api/services/app/OAuth2/AnswerLoginRequestTest?code=" + $('#token').val() + "&sureLogin=" + sure,
+                // 提交的页面
+                data: {},
+                // 从表单中获取数据
+                type: "POST",
+                // 设置请求类型为"POST"，默认为"GET"
+                async: true,
+                success: function (data) {
+                    messageMsg(data.SureDo);
+                }
+            });
+        }
+        function CheckTokenTest() {
+            $.ajax({
+                url: host+"api/services/app/OAuth2/CheckTokenTest?Token=" + $('#token').val(),
+                // 提交的页面
+                data: {},
+                // 从表单中获取数据
+                type: "POST",
+                // 设置请求类型为"POST"，默认为"GET"
+                async: true,
+                success: function (data) {
+                    if (data.statusCode == 200)
+                    {
+                        $("#loginState").html("登录成功");
+                        changeloginState(true);
+                    }
+
+                    if (data.statusCode == 401)
+                    {
+                        $("#loginState").html("登录失败");
+                        changeloginState(false);
+                    }
+
+                    $('#checkMessage').append($('<li class="list-item">').text(JSON.stringify(data)));
+                }
+            });
+        }
+        function SignaIRTest(token) {
+            //调用服务器方法
+            hubConnection.invoke('LoginSuccessOrWait', token);
+        }
+
+        function messageMsg(text) {
+            $('#message').append($('<li class="list-item">').text(text));
+            CheckTokenTest();
+        }
+        //
+        function changeloginState(loginStateCode)
+        {
+            loginState = loginStateCode;
+            if (loginStateCode) {
+                $("#login").attr("disabled", true);
+                $("#logout").removeAttr("disabled");
+            }
+            else
+            {
+                $("#logout").attr("disabled", true);
+                $("#login").removeAttr("disabled");
+            }
+        }
+        //定时器
+        function countdown(alertMsg,isOK) {
+            $("#time30").html(alertMsg+"("+countdownNum+"秒）");
+            if (countdownNum > 0)
+                countdownNum--;
+            else {
+                clearInterval(countdownInt);
+                if (isOK)
+                    Modal.hideAlertOk();
+                else
+                    Modal.hideAlertCancel();
+                countdownNum = 29;
+            }
+        }
+    </script>
+</body>
+</html>

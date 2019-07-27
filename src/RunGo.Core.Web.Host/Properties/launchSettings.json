@@ -1,0 +1,32 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iis": {
+      "applicationUrl": "http://127.0.0.1:8051/",
+      "sslPort": 0
+    },
+    "iisExpress": {
+      "applicationUrl": "http://127.0.0.1:8051/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "RunGo.Core.Web.Host": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "http://127.0.0.1:8051/",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://127.0.0.1:8051/"
+    }
+  }
+}

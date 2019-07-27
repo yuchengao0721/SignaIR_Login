@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <VersionPrefix>1.0.0.0</VersionPrefix>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <AssemblyName>RunGo.Core.Application</AssemblyName>
+    <PackageId>RunGo.Core.Application</PackageId>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <RootNamespace>RunGo.Core</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <OutputPath>bin\Debug\netcoreapp2.1\netcoreapp2.2\netcoreapp2.2\</OutputPath>
+    <DocumentationFile>bin\Debug\netcoreapp2.1\netcoreapp2.2\netcoreapp2.2\RunGo.Core.Application.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Attribute\**" />
+    <Compile Remove="Managing\Department\**" />
+    <Compile Remove="Managing\WorkGroup\**" />
+    <EmbeddedResource Remove="Attribute\**" />
+    <EmbeddedResource Remove="Managing\Department\**" />
+    <EmbeddedResource Remove="Managing\WorkGroup\**" />
+    <None Remove="Attribute\**" />
+    <None Remove="Managing\Department\**" />
+    <None Remove="Managing\WorkGroup\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="AppConsts.cs" />
+    <Compile Remove="Managing\Permonises\AccountPermonisesAppService.cs" />
+    <Compile Remove="Managing\Permonises\IAccountPermonisesAppService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Abp" Version="4.6.0" />
+    <PackageReference Include="Abp.AspNetCore" Version="4.3.0" />
+    <PackageReference Include="Abp.AutoMapper" Version="4.6.0" />
+    <PackageReference Include="Abp.EntityFrameworkCore" Version="4.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\RunGo.Jwt\RunGo.Jwt.csproj" />
+    <ProjectReference Include="..\..\Util\SignaIR\SignaIR.csproj" />
+    <ProjectReference Include="..\..\Util\Utils\Utils.csproj" />
+    <ProjectReference Include="..\RunGo.Core.Core\RunGo.Core.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNetCore.Mvc.Core">
+      <HintPath>C:\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.aspnetcore.mvc.core\2.2.0\lib\netstandard2.0\Microsoft.AspNetCore.Mvc.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
